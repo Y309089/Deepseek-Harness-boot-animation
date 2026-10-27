@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>DeepSeek Harness · 启动</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#04060c;
+    --accent:#4d6bfe;
+    --accent2:#7aa2ff;
+    --ink:#e8eefc;
+    --muted:#6b7891;
+    --dur:4300ms;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Segoe UI","Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif;
+    overflow:hidden;
+    display:grid;
+    place-items:center;
+    cursor:none;
+  }
+  #stage{
+    position:fixed;
+    inset:0;
+    display:grid;
+    place-items:center;
+    animation:stageOut 420ms ease-in 3880ms both;
+  }
+
+  /* 背景光 */
+  .bg{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(60% 55% at 50% 42%, rgba(60,90,220,.20) 0%, rgba(4,6,12,0) 70%),
+      radial-gradient(40% 40% at 50% 55%, rgba(122,162,255,.10) 0%, rgba(4,6,12,0) 75%);
+    animation:bgIn 900ms ease-out both;
+  }
+  .vignette{
+    position:absolute;inset:0;
+    background:radial-gradient(120% 100% at 50% 50%, rgba(0,0,0,0) 45%, rgba(0,0,0,.75) 100%);
+  }
+
+  /* 扫描线 */
+  .scan{
+    position:absolute;left:50%;top:0;
+    width:min(760px,80vw);height:2px;
+    transform:translateX(-50%);
+    background:linear-gradient(90deg,transparent,rgba(122,162,255,.95),transparent);
+    filter:blur(1px);
+    opacity:0;
+    animation:scan 1600ms cubic-bezier(.4,0,.2,1) 250ms both;
+  }
+
+  /* 粒子 */
+  .particles{position:absolute;inset:0;overflow:hidden;opacity:0;animation:bgIn 2000ms ease-out 200ms both}
+  .p{
+    position:absolute;
+    width:2px;height:2px;border-radius:50%;
+    background:var(--accent2);
+    box-shadow:0 0 6px rgba(122,162,255,.9);
+    animation:float linear infinite;
+  }
+
+  /* 中心内容 */
+  .core{position:relative;display:flex;flex-direction:column;align-items:center;gap:26px}
+
+  .markwrap{position:relative;width:132px;height:132px;display:grid;place-items:center}
+  .ring{position:absolute;inset:0;overflow:visible}
+  .ring circle{
+    fill:none;stroke:rgba(122,162,255,.55);stroke-width:1.2;
+    stroke-dasharray:415;stroke-dashoffset:415;
+    transform-origin:center;transform:rotate(-90deg);
+  }
+  .ring circle{animation:draw 1500ms cubic-bezier(.65,0,.35,1) 180ms both}
+  .mark{
+    width:88px;height:88px;border-radius:22px;
+    display:grid;place-items:center;
+    background:linear-gradient(160deg,rgba(77,107,254,.16),rgba(77,107,254,.03));
+    border:1px solid rgba(122,162,255,.38);
+    box-shadow:0 0 40px rgba(77,107,254,.25),inset 0 0 24px rgba(77,107,254,.12);
+    opacity:0;transform:scale(.86);
+    animation:markIn 900ms cubic-bezier(.2,.9,.2,1) 520ms both;
+  }
+  .mark span{
+    font-family:"Consolas","Cascadia Mono",monospace;
+    font-size:26px;letter-spacing:2px;font-weight:600;
+    color:#cfe0ff;
+    text-shadow:0 0 18px rgba(122,162,255,.75);
+    opacity:0;
+    animation:fadeIn 600ms ease-out 900ms both;
+  }
+
+  /* 字样 */
+  .word{
+    position:relative;
+    display:flex;align-items:baseline;gap:10px;
+    font-size:34px;font-weight:600;letter-spacing:.5px;
+    clip-path:inset(0 100% 0 0);
+    animation:wipe 1100ms cubic-bezier(.65,0,.35,1) 1150ms both;
+  }
+  .word b{font-weight:300;color:var(--muted)}
+  .word .hl{
+    background:linear-gradient(100deg,#e8eefc 0%,#e8eefc 38%,#8fb0ff 50%,#e8eefc 62%,#e8eefc 100%);
+    background-size:280% 100%;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:shimmer 2400ms ease-in-out 1700ms infinite;
+  }
+  .sub{
+    font-size:12px;letter-spacing:6px;color:var(--muted);
+    text-transform:uppercase;
+    opacity:0;animation:fadeUp 700ms ease-out 1650ms both;
+  }
+
+  /* 进度 */
+  .meter{
+    position:absolute;left:50%;bottom:12vh;transform:translateX(-50%);
+    width:min(420px,64vw);
+    opacity:0;animation:fadeIn 500ms ease-out 1900ms both;
+  }
+  .track{height:2px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+  .fill{
+    height:100%;width:0;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    box-shadow:0 0 12px rgba(122,162,255,.85);
+    animation:fill 1900ms cubic-bezier(.3,.1,.2,1) 1950ms both;
+  }
+  .meta{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:12px;font-size:11px;letter-spacing:2px;
+    font-family:"Consolas","Cascadia Mono",monospace;
+    color:var(--muted);
+  }
+  .meta .pct{color:#9fb8ff}
+
+  @keyframes bgIn{from{opacity:0}to{opacity:1}}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes markIn{to{opacity:1;transform:scale(1)}}
+  @keyframes fadeIn{to{opacity:1}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes wipe{to{clip-path:inset(0 0 0 0)}}
+  @keyframes fill{to{width:100%}}
+  @keyframes shimmer{0%{background-position:120% 0}100%{background-position:-80% 0}}
+  @keyframes scan{
+    0%{top:-2%;opacity:0}
+    15%{opacity:1}
+    85%{opacity:1}
+    100%{top:102%;opacity:0}
+  }
+  @keyframes float{
+    0%{transform:translateY(0);opacity:0}
+    10%{opacity:.9}
+    90%{opacity:.35}
+    100%{transform:translateY(-42vh);opacity:0}
+  }
+  @keyframes stageOut{to{opacity:0;filter:blur(8px)}}
+
+  /* 主动画播完后 DSH 还在加载时的等待态，避免对着黑屏 */
+  .hold{
+    position:absolute;left:50%;top:50%;
+    display:flex;flex-direction:column;align-items:center;gap:16px;
+    opacity:0;animation:holdIn 600ms ease-out 4300ms both;
+    color:var(--muted);font-size:12px;letter-spacing:5px;font-family:inherit;
+  }
+  .hold .dot{
+    width:26px;height:26px;border-radius:7px;
+    background:linear-gradient(140deg,var(--accent),var(--accent2));
+    box-shadow:0 0 28px rgba(122,162,255,.5);
+    animation:breathe 1400ms ease-in-out 4300ms infinite;
+  }
+  @keyframes holdIn{
+    from{opacity:0;transform:translate(-50%,-46%)}
+    to{opacity:1;transform:translate(-50%,-50%)}
+  }
+  @keyframes breathe{
+    0%,100%{transform:scale(.85);opacity:.55}
+    50%{transform:scale(1);opacity:1}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="bg"></div>
+  <div class="particles" id="particles"></div>
+  <div class="scan"></div>
+  <div class="vignette"></div>
+
+  <div class="core">
+    <div class="markwrap">
+      <svg class="ring" viewBox="0 0 132 132" aria-hidden="true">
+        <circle cx="66" cy="66" r="66"></circle>
+      </svg>
+      <div class="mark"><span>DSH</span></div>
+    </div>
+
+    <div class="word">
+      <span>DeepSeek</span><b>Harness</b>
+    </div>
+    <div class="sub">local agent workbench</div>
+  </div>
+
+  <div class="meter">
+    <div class="track"><div class="fill"></div></div>
+    <div class="meta">
+      <span id="status">初始化运行时</span>
+      <span class="pct" id="pct">0%</span>
+    </div>
+  </div>
+</div>
+
+<div class="hold"><div class="dot"></div><span>正在启动</span></div>
+
+<script>
+  /* 粒子 */
+  (function () {
+    const box = document.getElementById("particles");
+    const n = 46;
+    for (let i = 0; i < n; i++) {
+      const d = document.createElement("div");
+      d.className = "p";
+      d.style.left = Math.random() * 100 + "%";
+      d.style.top = 55 + Math.random() * 55 + "%";
+      d.style.opacity = 0.25 + Math.random() * 0.55;
+      const s = 0.7 + Math.random() * 1.6;
+      d.style.transform = `scale(${s})`;
+      d.style.animationDuration = 6 + Math.random() * 9 + "s";
+      d.style.animationDelay = -Math.random() * 10 + "s";
+      box.appendChild(d);
+    }
+  })();
+
+  /* 文字与百分比：按时间轴渲染，支持 ?at=毫秒 定格某一帧（用于截图核对） */
+  const STATUS = [
+    [0, "初始化运行时"],
+    [900, "加载插件"],
+    [1900, "连接模型网关"],
+    [3100, "准备就绪"],
+  ];
+  const DUR = 4300;
+
+  function render(t) {
+    const ratio = Math.max(0, Math.min(1, (t - 1950) / 1900));
+    document.getElementById("pct").textContent = Math.round(ratio * 100) + "%";
+    let label = STATUS[0][1];
+    for (const [at, text] of STATUS) if (t >= at) label = text;
+    document.getElementById("status").textContent = label;
+  }
+
+  const at = Number(new URLSearchParams(location.search).get("at"));
+  if (at) {
+    render(at);
+    requestAnimationFrame(() => {
+      document.getAnimations().forEach((a) => {
+        a.currentTime = at;
+        a.pause();
+      });
+    });
+  } else {
+    const t0 = performance.now();
+    (function tick(now) {
+      const t = now - t0;
+      if (t <= DUR) {
+        render(t);
+        requestAnimationFrame(tick);
+      }
+    })(performance.now());
+  }
+</script>
+</body>
+</html>
