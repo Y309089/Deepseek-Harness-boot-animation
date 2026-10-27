@@ -2,7 +2,8 @@
 
 > 一个为 DeepSeek Harness 制作的自定义开机动画。
 > A custom boot animation for DeepSeek Harness.
-> ## ✨ 特性 (Features)
+> 👉 **[点击这里在线预览开机动画 (Live Demo)](https://y309089.github.io/Deepseek-Harness-boot-animation/boot.html)**
+> 特性 (Features)
 
 - 纯前端实现，无需复杂依赖 (Pure HTML/CSS/JS implementation)
 - 包含进度条、状态字切换、反光特效 (Progress bar, status text switching, glare effects)
